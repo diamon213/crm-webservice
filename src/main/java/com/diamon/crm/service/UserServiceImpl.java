@@ -1,0 +1,72 @@
+package com.diamon.crm.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.diamon.crm.exception.InvalidArgumentException;
+import com.diamon.crm.exception.UserAlreadyExistsException;
+import com.diamon.crm.exception.UserNotFoundException;
+import com.diamon.crm.model.AppUser;
+import com.diamon.crm.repository.UserRepository;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+	@Autowired
+	private UserRepository userRepository;
+	
+	@Override
+	public List<AppUser> getAllUsers() {
+		List<AppUser> res = new ArrayList<>();
+		
+		for (var user : userRepository.findAll()) {
+			res.add(user);
+		}
+		return res;
+	}
+
+	@Override
+	public AppUser addUser(String userName, String password, List<String> roles) {
+		// Check parameter
+		if (userName == null || password == null) {
+			throw new InvalidArgumentException();
+		}
+		// Check already exists
+		if (userRepository.findByUserName(userName).isPresent()) {
+			throw new UserAlreadyExistsException();
+		}
+		return userRepository.insertUser(
+				userName, password, roles == null ? new ArrayList<>() : roles);
+	}
+
+	@Override
+	public AppUser findByUserName(String userName) {
+		if (userName == null) {
+			throw new InvalidArgumentException();
+		}
+		return userRepository.findByUserName(userName)
+			.orElseThrow(UserNotFoundException::new);
+	}
+
+	@Override
+	public AppUser getUserById(long userId) {		
+		return userRepository.findById(userId)
+				.orElseThrow(UserNotFoundException::new);
+	}
+
+	@Override
+	public void deleteUserById(long userId) {
+		getUserById(userId);
+		userRepository.deleteById(userId);
+	}
+
+	@Override
+	public AppUser setRolesForUser(long userId, List<String> roles) {
+		if (roles == null) { throw new InvalidArgumentException(); }
+		AppUser user = getUserById(userId);
+		return userRepository.setRoles(user, roles);
+	}	
+}
