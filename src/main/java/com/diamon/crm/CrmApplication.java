@@ -16,4 +16,6 @@ public class CrmApplication {
 	BCryptPasswordEncoder bCryptPasswordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
+
+	//Muhhahaha
 }
